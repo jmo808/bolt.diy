@@ -91,7 +91,8 @@ function getSupabaseProjectDomainSuffix(): string {
   const normalized = configuredSuffix
     ?.trim()
     .replace(/^https?:\/\//, '')
-    .replace(/\/+$/, '');
+    .split('/')[0]
+    .replace(/^\.+/, '');
 
   return normalized || 'supabase.co';
 }

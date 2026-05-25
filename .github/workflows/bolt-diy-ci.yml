@@ -1,18 +1,6 @@
 name: Bolt.diy CI
 
 on:
-  push:
-    branches:
-      - main
-      - stable
-      - 'bbmx/**'
-  pull_request:
-    paths:
-      - Dockerfile
-      - docker-compose.yaml
-      - package.json
-      - pnpm-lock.yaml
-      - app/**
   workflow_dispatch:
     inputs:
       push_image:

@@ -10,6 +10,7 @@ permissions:
   contents: write
 jobs:
   build_docs:
+    if: github.repository == 'stackblitz-labs/bolt.diy'
     runs-on: ubuntu-latest
     defaults:
       run:

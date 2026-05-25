@@ -17,6 +17,7 @@ permissions:
 jobs:
   codeql:
     name: CodeQL Analysis
+    if: github.repository == 'stackblitz-labs/bolt.diy'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     
@@ -54,6 +55,7 @@ jobs:
 
   dependency-scan:
     name: Dependency Vulnerability Scan
+    if: github.repository == 'stackblitz-labs/bolt.diy'
     runs-on: ubuntu-latest
 
     steps:
@@ -95,6 +97,7 @@ jobs:
 
   secrets-scan:
     name: Secrets Detection
+    if: github.repository == 'stackblitz-labs/bolt.diy'
     runs-on: ubuntu-latest
 
     steps:
@@ -118,4 +121,3 @@ jobs:
         with:
           name: trivy-secrets-results
           path: trivy-secrets-results.sarif
-

@@ -22,7 +22,7 @@ env:
 jobs:
   build-and-publish:
     name: Build and publish bolt.diy image
-    runs-on: bbmxclus1-bolt
+    runs-on: bbmxclus1
     timeout-minutes: 45
 
     steps:

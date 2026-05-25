@@ -1,6 +1,7 @@
 import { json } from '@remix-run/cloudflare';
 import { getApiKeysFromCookie } from '~/lib/api/cookies';
 import { withSecurity } from '~/lib/security';
+import { getSupabaseManagementApiBaseUrl } from '~/lib/supabase/managementApi.server';
 
 async function supabaseUserLoader({ request, context }: { request: Request; context: any }) {
   try {
@@ -18,8 +19,10 @@ async function supabaseUserLoader({ request, context }: { request: Request; cont
       return json({ error: 'Supabase token not found' }, { status: 401 });
     }
 
+    const managementApiBaseUrl = getSupabaseManagementApiBaseUrl(context);
+
     // Make server-side request to Supabase API
-    const response = await fetch('https://api.supabase.com/v1/projects', {
+    const response = await fetch(`${managementApiBaseUrl}/v1/projects`, {
       headers: {
         Authorization: `Bearer ${supabaseToken}`,
         'User-Agent': 'bolt.diy-app',
@@ -83,6 +86,7 @@ export const loader = withSecurity(supabaseUserLoader, {
 
 async function supabaseUserAction({ request, context }: { request: Request; context: any }) {
   try {
+    const managementApiBaseUrl = getSupabaseManagementApiBaseUrl(context);
     const formData = await request.formData();
     const action = formData.get('action');
 
@@ -102,7 +106,7 @@ async function supabaseUserAction({ request, context }: { request: Request; cont
 
     if (action === 'get_projects') {
       // Fetch user projects
-      const response = await fetch('https://api.supabase.com/v1/projects', {
+      const response = await fetch(`${managementApiBaseUrl}/v1/projects`, {
         headers: {
           Authorization: `Bearer ${supabaseToken}`,
           'User-Agent': 'bolt.diy-app',
@@ -156,7 +160,7 @@ async function supabaseUserAction({ request, context }: { request: Request; cont
       }
 
       // Fetch project API keys
-      const response = await fetch(`https://api.supabase.com/v1/projects/${projectId}/api-keys`, {
+      const response = await fetch(`${managementApiBaseUrl}/v1/projects/${projectId}/api-keys`, {
         headers: {
           Authorization: `Bearer ${supabaseToken}`,
           'User-Agent': 'bolt.diy-app',

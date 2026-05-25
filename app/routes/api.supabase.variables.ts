@@ -1,6 +1,7 @@
 import { json, type ActionFunctionArgs } from '@remix-run/cloudflare';
+import { getSupabaseManagementApiBaseUrl } from '~/lib/supabase/managementApi.server';
 
-export async function action({ request }: ActionFunctionArgs) {
+export async function action({ request, context }: ActionFunctionArgs) {
   try {
     // Add proper type assertion for the request body
     const body = (await request.json()) as { projectId?: string; token?: string };
@@ -10,7 +11,8 @@ export async function action({ request }: ActionFunctionArgs) {
       return json({ error: 'Project ID and token are required' }, { status: 400 });
     }
 
-    const response = await fetch(`https://api.supabase.com/v1/projects/${projectId}/api-keys`, {
+    const managementApiBaseUrl = getSupabaseManagementApiBaseUrl(context);
+    const response = await fetch(`${managementApiBaseUrl}/v1/projects/${projectId}/api-keys`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,

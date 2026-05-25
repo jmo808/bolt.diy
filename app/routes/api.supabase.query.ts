@@ -1,9 +1,10 @@
 import { type ActionFunctionArgs } from '@remix-run/cloudflare';
+import { getSupabaseManagementApiBaseUrl } from '~/lib/supabase/managementApi.server';
 import { createScopedLogger } from '~/utils/logger';
 
 const logger = createScopedLogger('api.supabase.query');
 
-export async function action({ request }: ActionFunctionArgs) {
+export async function action({ request, context }: ActionFunctionArgs) {
   if (request.method !== 'POST') {
     return new Response('Method not allowed', { status: 405 });
   }
@@ -16,9 +17,10 @@ export async function action({ request }: ActionFunctionArgs) {
 
   try {
     const { projectId, query } = (await request.json()) as any;
+    const managementApiBaseUrl = getSupabaseManagementApiBaseUrl(context);
     logger.debug('Executing query:', { projectId, query });
 
-    const response = await fetch(`https://api.supabase.com/v1/projects/${projectId}/database/query`, {
+    const response = await fetch(`${managementApiBaseUrl}/v1/projects/${projectId}/database/query`, {
       method: 'POST',
       headers: {
         Authorization: authHeader,

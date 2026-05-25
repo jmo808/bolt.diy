@@ -86,6 +86,16 @@ export const isConnecting = atom(false);
 export const isFetchingStats = atom(false);
 export const isFetchingApiKeys = atom(false);
 
+function getSupabaseProjectDomainSuffix(): string {
+  const configuredSuffix = import.meta.env?.VITE_SUPABASE_PROJECT_DOMAIN_SUFFIX as string | undefined;
+  const normalized = configuredSuffix
+    ?.trim()
+    .replace(/^https?:\/\//, '')
+    .replace(/\/+$/, '');
+
+  return normalized || 'supabase.co';
+}
+
 if (initialState.token && !initialState.stats) {
   fetchSupabaseStats(initialState.token).catch(console.error);
 }
@@ -211,7 +221,8 @@ export async function fetchProjectApiKeys(projectId: string, token: string) {
     const anonKey = apiKeys.find((key: SupabaseApiKey) => key.name === 'anon' || key.name === 'public');
 
     if (anonKey) {
-      const supabaseUrl = `https://${projectId}.supabase.co`;
+      const projectDomainSuffix = getSupabaseProjectDomainSuffix();
+      const supabaseUrl = `https://${projectId}.${projectDomainSuffix}`;
 
       updateSupabaseConnection({
         credentials: {

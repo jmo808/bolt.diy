@@ -1,0 +1,109 @@
+name: Bolt.diy CI
+
+on:
+  push:
+    branches:
+      - main
+      - stable
+      - 'bbmx/**'
+  pull_request:
+    paths:
+      - Dockerfile
+      - docker-compose.yaml
+      - package.json
+      - pnpm-lock.yaml
+      - app/**
+  workflow_dispatch:
+    inputs:
+      push_image:
+        description: Push image to Harbor
+        type: boolean
+        default: true
+      image_repository:
+        description: Harbor repository path (project/name)
+        type: string
+        default: team-dev/bolt-diy
+
+permissions:
+  contents: read
+
+env:
+  REGISTRY: harbor.bbmxclus1.blackbutterfly.mx
+  DEFAULT_IMAGE_REPOSITORY: team-dev/bolt-diy
+
+jobs:
+  build-and-publish:
+    name: Build and publish bolt.diy image
+    runs-on: bbmxclus1
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Resolve publish settings
+        id: vars
+        run: |
+          set -euo pipefail
+          REPO_INPUT="${{ github.event.inputs.image_repository || '' }}"
+          if [[ -n "${REPO_INPUT}" ]]; then
+            IMAGE_REPOSITORY="${REPO_INPUT}"
+          else
+            IMAGE_REPOSITORY="${DEFAULT_IMAGE_REPOSITORY}"
+          fi
+
+          SHOULD_PUSH="false"
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            SHOULD_PUSH="true"
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.event.inputs.push_image }}" == "true" ]]; then
+            SHOULD_PUSH="true"
+          fi
+
+          echo "image_repository=${IMAGE_REPOSITORY}" >> "${GITHUB_OUTPUT}"
+          echo "should_push=${SHOULD_PUSH}" >> "${GITHUB_OUTPUT}"
+
+      - name: Log in to Harbor
+        if: steps.vars.outputs.should_push == 'true'
+        run: |
+          set -euo pipefail
+          docker login "${REGISTRY}" \
+            --username "${{ secrets.HARBOR_USERNAME }}" \
+            --password "${{ secrets.HARBOR_PASSWORD }}"
+
+      - name: Build and optionally push image
+        run: |
+          set -euo pipefail
+
+          SHORT_SHA="$(echo "${GITHUB_SHA}" | cut -c1-8)"
+          IMAGE="${REGISTRY}/${{ steps.vars.outputs.image_repository }}"
+          BRANCH_NAME="$(echo "${GITHUB_REF_NAME}" | tr '[:upper:]' '[:lower:]' | tr '/_' '--' | tr -cd 'a-z0-9.-')"
+
+          TAGS=(
+            "${IMAGE}:${SHORT_SHA}"
+          )
+
+          if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
+            TAGS+=("${IMAGE}:latest")
+          elif [[ "${GITHUB_REF}" == "refs/heads/stable" ]]; then
+            TAGS+=("${IMAGE}:stable")
+          else
+            TAGS+=("${IMAGE}:${BRANCH_NAME}")
+          fi
+
+          BUILD_TAG_ARGS=()
+          for tag in "${TAGS[@]}"; do
+            BUILD_TAG_ARGS+=(--tag "${tag}")
+          done
+
+          docker build \
+            --target bolt-ai-production \
+            "${BUILD_TAG_ARGS[@]}" \
+            .
+
+          if [[ "${{ steps.vars.outputs.should_push }}" == "true" ]]; then
+            for tag in "${TAGS[@]}"; do
+              docker push "${tag}"
+            done
+          else
+            echo "Skipping push for event ${GITHUB_EVENT_NAME}"
+          fi

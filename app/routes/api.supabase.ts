@@ -1,15 +1,17 @@
 import { json, type ActionFunction } from '@remix-run/cloudflare';
+import { getSupabaseManagementApiBaseUrl } from '~/lib/supabase/managementApi.server';
 import type { SupabaseProject } from '~/types/supabase';
 
-export const action: ActionFunction = async ({ request }) => {
+export const action: ActionFunction = async ({ request, context }) => {
   if (request.method !== 'POST') {
     return json({ error: 'Method not allowed' }, { status: 405 });
   }
 
   try {
     const { token } = (await request.json()) as any;
+    const managementApiBaseUrl = getSupabaseManagementApiBaseUrl(context);
 
-    const projectsResponse = await fetch('https://api.supabase.com/v1/projects', {
+    const projectsResponse = await fetch(`${managementApiBaseUrl}/v1/projects`, {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',

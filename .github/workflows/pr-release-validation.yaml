@@ -14,6 +14,7 @@ permissions:
 jobs:
   quality-gates:
     name: Quality Gates
+    if: github.repository == 'stackblitz-labs/bolt.diy'
     runs-on: ubuntu-latest
     
     steps:
@@ -73,6 +74,7 @@ jobs:
 
   validate-release:
     name: Release Validation
+    if: github.repository == 'stackblitz-labs/bolt.diy'
     runs-on: ubuntu-latest
     needs: quality-gates
 
@@ -115,8 +117,8 @@ jobs:
 
   security-review:
     name: Security Review Required
+    if: github.repository == 'stackblitz-labs/bolt.diy' && contains(github.event.pull_request.labels.*.name, 'security')
     runs-on: ubuntu-latest
-    if: contains(github.event.pull_request.labels.*.name, 'security')
     
     steps:
       - name: Check security label

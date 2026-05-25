@@ -18,8 +18,8 @@ permissions:
 jobs:
   deploy-preview:
     name: Deploy Preview
+    if: github.repository == 'stackblitz-labs/bolt.diy' && github.event.action != 'closed'
     runs-on: ubuntu-latest
-    if: github.event.action != 'closed'
     
     steps:
       - name: Check if preview deployment is configured
@@ -150,8 +150,8 @@ jobs:
 
   cleanup-preview:
     name: Cleanup Preview
+    if: github.repository == 'stackblitz-labs/bolt.diy' && github.event.action == 'closed'
     runs-on: ubuntu-latest
-    if: github.event.action == 'closed'
 
     steps:
       - name: Delete preview environment

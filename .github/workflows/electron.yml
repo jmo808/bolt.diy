@@ -17,6 +17,7 @@ permissions:
 
 jobs:
   build:
+    if: github.repository == 'stackblitz-labs/bolt.diy'
     runs-on: ${{ matrix.os }}
     
     strategy:
